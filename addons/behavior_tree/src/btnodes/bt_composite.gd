@@ -8,13 +8,15 @@ extends BTNode
 # to you, but you may have some specific flow in your game. In that case,
 # you can extend this script and define it yourself.
 
-onready var children: Array = get_children() as Array
+@onready var children: Array = get_children() as Array
 
 var bt_child: BTNode # Used to iterate over children
 
 
 
 func _ready():
+	super._ready()
+	
 	assert(get_child_count() > 1, "A BTComposite must have more than one child.")
 
 
@@ -24,9 +26,6 @@ func _tick(agent: Node, blackboard: Blackboard) -> bool:
 	
 	for c in children:
 		bt_child = c
-		result = bt_child.tick(agent, blackboard)
-		
-		if result is GDScriptFunctionState:
-			result = yield(result, "completed")
+		result = await bt_child.tick(agent, blackboard)
 	
 	return succeed()

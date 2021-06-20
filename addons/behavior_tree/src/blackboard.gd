@@ -11,7 +11,7 @@ extends Node
 # This is a good way to separate data from behavior, which is essential 
 # to avoid nasty bugs.
 
-export(Dictionary) var data: Dictionary
+@export var data: Dictionary
 
 
 

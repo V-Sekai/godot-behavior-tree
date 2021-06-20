@@ -11,70 +11,75 @@ extends BTDecorator
 #
 # A locked BTGuard will always return fail().
 
-export(bool) var start_locked = false
-export(bool) var permanent = false
-export(NodePath) var _locker
-export(int, "Failure", "Success", "Always") var lock_if
-export(NodePath) var _unlocker
-export(int, "Failure", "Success") var unlock_if
-export(float) var lock_time = 0.05
+@export var start_locked: bool = false
+@export var permanent: bool = false
+@export var _locker: NodePath
+@export_enum("Failure", "Success", "Always") var lock_if: int
+@export var _unlocker: NodePath
+@export_enum("Failure", "Success") var unlock_if: int
+@export var lock_time: float = 0.05
 
 var locked: bool = false
 
-onready var unlocker: BTNode = get_node_or_null(_unlocker)
-onready var locker: BTNode = get_node_or_null(_locker)
+@onready var unlocker: BTNode = get_node_or_null(_unlocker)
+@onready var locker: BTNode = get_node_or_null(_locker)
 
 
 
 func _ready():
+	super._ready()
+	
 	if start_locked:
-		lock()
+		await lock()
 	
 	if locker:
-		locker.connect("tick", self, "_on_locker_tick")
+		locker.connect("tick_done", Callable(self, "_on_locker_tick"))
 
 
 func _on_locker_tick(_result):
-	check_lock(locker)
+	await check_lock(locker)
 	set_state(locker.state)
 
+func _unlocker_tick_done(_result) -> bool:
+	unlocker.disconnect("tick_done", Callable(self, "_unlocker_tick_done"))
+	return bool(_result)
 
 func lock():
 	locked = true
 	
 	if debug:
-		print(name + " locked for " + str(lock_time) + " seconds")
+		print(str(name) + " locked for " + str(lock_time) + " seconds")
 	
 	if permanent:
 		return
 	elif unlocker:
 		while locked:
-			var result = yield(unlocker, "tick")
+			var result: Variant = await unlocker.tick_done
 			if result == bool(unlock_if):
 				locked = false
 	else:
-		yield(get_tree().create_timer(lock_time, false), "timeout")
+		await get_tree().create_timer(lock_time, false).timeout
 		locked = false
 	
 	if debug:
-		print(name + " unlocked")
+		print(str(name) + " unlocked")
 
 
 func check_lock(current_locker: BTNode):
 	if ((lock_if == 2 and not current_locker.running()) 
 	or ( lock_if == 1 and current_locker.succeeded()) 
 	or ( lock_if == 0 and current_locker.failed())):
-		lock()
+		await lock()
 
 
 func _tick(agent: Node, blackboard: Blackboard) -> bool:
 	if locked:
 		return fail()
-	return ._tick(agent, blackboard)
+	return await super._tick(agent, blackboard)
 
 
 func _post_tick(agent: Node, blackboard: Blackboard, result: bool) -> void:
 	if not locker:
-		check_lock(bt_child)
+		await check_lock(bt_child)
 
 

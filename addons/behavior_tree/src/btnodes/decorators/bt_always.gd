@@ -3,16 +3,17 @@ extends BTDecorator
 
 # Executes the child and always either succeeds or fails.
 
-export(int, "Fail", "Succeed") var always_what
+@export_enum("Fail", "Succeed") var always_what: int
 
-onready var return_func: String = "fail" if always_what == 0 else "succeed"
+@onready var return_func: String = "fail" if always_what == 0 else "succeed"
 
 
 
 func _tick(agent: Node, blackboard: Blackboard) -> bool:
-	var result = bt_child.tick(agent, blackboard)
-	
-	if result is GDScriptFunctionState:
-		result = yield(result, "completed")
+	var result = await bt_child.tick(agent, blackboard)
 	
 	return call(return_func)
+	
+# Should this be implicit?
+func _ready():
+	super._ready()

@@ -5,8 +5,8 @@ extends BTLeaf
 # if desired, another amount can be specified. In that case, wait_time is overridden.
 
 
-export(float) var wait_time: float
-export(String) var time_in_bb: String
+@export var wait_time: float
+@export var time_in_bb: String
 
 
 
@@ -14,6 +14,6 @@ func _tick(agent: Node, blackboard: Blackboard) -> bool:
 	if time_in_bb:
 		wait_time = blackboard.get_data(time_in_bb)
 	
-	yield(get_tree().create_timer(wait_time, false), "timeout")
+	await get_tree().create_timer(wait_time, false).timeout
 	
 	return succeed()
