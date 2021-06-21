@@ -3,7 +3,7 @@ extends BTDecorator
 
 # Executes the child and always either succeeds or fails.
 
-@export_enum("Fail", "Succeed") var always_what: int
+@export_enum("Fail", "Succeed") var always_what: int = 0
 
 @onready var return_func: String = "fail" if always_what == 0 else "succeed"
 
