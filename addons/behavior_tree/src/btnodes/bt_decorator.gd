@@ -12,10 +12,6 @@ func _ready():
 	super._ready()
 	
 	assert(get_child_count() == 1, "A BTDecorator can only have one child.")
-	var foo = get_child(0)
-	print(foo.name)
-	bt_child = get_child(0)
-	assert(bt_child)
 
 
 func _tick(agent: Node, blackboard: Blackboard) -> bool:
